@@ -1,61 +1,68 @@
 
-# PDU Device API (Local, DB-backed Users + JWT)
 
-FastAPI + SQLAlchemy app connecting to **local MySQL** with:
-- `device` table CRUD (protected)
-- DB-backed `users` with bcrypt-hashed passwords
-- JWT login (`/auth/token`)
-- Admin-only user management
+# apt-get upgrade -- upgrade fresh installed ubuntu
 
-## Prerequisites
-- Python 3.10+
-- MySQL running locally on 127.0.0.1:3306
+==================install Mysql:
+# apt-get install mysql-server -- install MySql server
+# mysql_secure_installation -- Setup MySql Server
+# systemctl restart mysql.service -- Restart Mysql Server
+# systemctl status mysql.service -- Check Status of Mysql Server
 
-## 1) Create DB & tables
-```bash
-mysql -u root -p < mysql/01_device.sql
-mysql -u root -p < mysql/02_users.sql
-```
+==================mysql
+# mysql -- access mysql 
+# CREATE USER 'horizen'@'%' IDENTIFIED  BY 'Horizen@123'; -- create MySQL User Name and Password
+# create database horizen; -- create database
+# GRANT ALL PRIVILEGES ON horizen.* TO 'horizen'@'%'; -- grant permission for the user
+# GRANT ALL PRIVILEGES ON *.* TO 'root'@'%'; -- grant full permisson to route from remote
+# FLUSH PRIVILEGES; to apply new PRIVILEGES on the server
 
-## 2) Configure `.env`
-Copy the sample and edit values:
-```bash
-cp app/.env.sample app/.env
-# edit app/.env (DB_*, SECRET_KEY, ADMIN_* for seeding)
-```
-Generate a strong SECRET_KEY:
-```bash
-python - <<'PY'
-import secrets; print(secrets.token_hex(32))
-PY
-```
+==================nginx & SSL & Code Server
+wget https://github.com/coder/code-server/releases/download/v4.98.2/code-server_4.98.2_amd64.deb
+sudo dpkg -i code-server_4.98.2_amd64.deb
+sudo systemctl enable --now code-server@root
+nano ~/.config/code-server/config.yaml -- to set the password 
 
-## 3) Seed the first admin
-```bash
-PYTHONPATH=. python scripts/seed_admin.py
-```
+sudo nano /etc/nginx/sites-available/code-server
 
-## 4) Run the API
-```bash
-./scripts/run_local.sh
-# open http://127.0.0.1:8000/docs
-```
+server {
+    listen 80;
+    server_name vscode.giize.com;  # Replace with your domain or server IP
 
-## 5) Login & use
-```bash
-curl -X POST http://127.0.0.1:8000/auth/token   -H 'Content-Type: application/x-www-form-urlencoded'   -d 'username=admin&password=<your-admin-pass>'
-```
-Use the token (Bearer) in Swagger UI (Authorize) or via curl.
+    location / {
+        proxy_pass http://localhost:8080; # Change this to your backend server
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
 
-## Endpoints
-- `POST /auth/token` – login with username/password → JWT
-- `GET /devices`, `POST /devices`, `PUT/PATCH/DELETE /devices/{id}` – protected
-- `GET /users` – list users (admin only)
-- `POST /users` – create user (admin only)
-- `GET /users/{id}` – get user (admin only)
-- `DELETE /users/{id}` – delete user (admin only)
+sudo ln -s /etc/nginx/sites-available/code-server /etc/nginx/sites-enabled/
+nginx -t
+sudo systemctl restart nginx
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d your_domain_or_ip
+sudo systemctl status code-server
+==================== Venv 
+ sudo apt install python3-venv
+ python3 -m venv .venv
 
-## Notes
-- Switch to Alembic for production migrations.
-- Rotate `SECRET_KEY`; never commit real secrets.
-- Consider adding scopes/roles to JWT if you need finer control.
+
+====================
+sudo apt update
+sudo apt install nodejs npm
+npm install -g pnpm
+============================
+pip install bcrypt==4.0.1
+
+ uvicorn app.main:app --host 172.17.165.132 --port 8000
+USE pdudb;
+
+INSERT INTO users (username, email, hashed_password, is_active, is_admin)
+VALUES ('admin', 'admin@example.com', '$2b$12$wvtzgPqv7..7hV6W9lZ8Z.4Yg0M3VnV3T6Qz8JRGz7mL8e8y4dF1u', 1, 1);
+
+
+
+
+
