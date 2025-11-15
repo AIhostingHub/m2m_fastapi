@@ -1,0 +1,28 @@
+
+CREATE DATABASE IF NOT EXISTS pdudb
+  DEFAULT CHARACTER SET utf8mb4
+  DEFAULT COLLATE utf8mb4_unicode_ci;
+
+USE pdudb;
+
+CREATE TABLE IF NOT EXISTS device (
+  id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  type          VARCHAR(30)  NOT NULL,
+  model         VARCHAR(30)  NOT NULL,
+  ip            VARCHAR(30)  NOT NULL,
+  sn            VARCHAR(30)  NULL,
+  active        TINYINT      NOT NULL DEFAULT 0,
+  live          TINYINT      NOT NULL DEFAULT 0,
+  moniter       TINYINT      NOT NULL DEFAULT 0,
+  row_pos       INT          NULL,
+  rack          INT          NULL,
+  location      VARCHAR(255) NULL,
+  lastcheck     DATETIME     NULL,
+  created_date  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_device_ip (ip),
+  KEY idx_device_type (type),
+  KEY idx_device_model (model),
+  KEY idx_device_location (location),
+  KEY idx_lastcheck (lastcheck)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
